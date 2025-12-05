@@ -2,7 +2,7 @@
 # Composite Demo
 # =================================
 
-from tree_design import LeafNode, DecisionNode
+from tree_design import LeafNode, DecisionNode, Tree, PreOrderIterator, BFSIterator, DepthVisitor, CountLeavesVisitor, TreeBuilder
 
 tree = DecisionNode(50, 1)
 
@@ -32,8 +32,6 @@ print(tree.operation(90)) # Verde
 # =================================
 # Iterator Demo
 # =================================
-
-from tree_design import Tree, PreOrderIterator, BFSIterator
 
 # Cria uma árvore para teste
 root = DecisionNode(50, 1)
@@ -69,8 +67,6 @@ for node in bfs_iterator:
 # State Pattern Demo
 # =================================
 
-from tree_design import TreeBuilder
-
 print("\n=== State Pattern Demo ===")
 print("Construindo árvore com TreeBuilder...\n")
 
@@ -78,3 +74,21 @@ builder = TreeBuilder()
 builder.construct()
 
 print("\nÁrvore construída!")
+
+# =================================
+# Visitor Pattern Demo
+# =================================
+
+print("\n=== Visitor Pattern Demo ===")
+
+depth_visitor = DepthVisitor(builder.tree.root)
+iterator = BFSIterator(builder.tree.root)
+for node in iterator:
+    node.accept(depth_visitor)
+print(f"\n[DepthVisitor] Profundidade máxima: {depth_visitor.get_result()}")
+
+leaves_visitor = CountLeavesVisitor(builder.tree.root)
+iterator = BFSIterator(builder.tree.root)
+for node in iterator:
+    node.accept(leaves_visitor)
+print(f"[CountLeavesVisitor]Total de folhas: {leaves_visitor.get_result()}")

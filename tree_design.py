@@ -33,6 +33,10 @@ class Node(ABC):
     def operation(self, value: float) -> str:
         pass
 
+    @abstractmethod
+    def accept(self, visitor):
+        pass
+
 class LeafNode(Node):
     def __init__(self, category: str, order: int):
         super().__init__(order)
@@ -40,6 +44,9 @@ class LeafNode(Node):
 
     def operation(self, value: float) -> str:
         return f"Leaf: {self._category}"
+
+    def accept(self, visitor):
+        visitor.visit_leaf_node(self)
 
 class DecisionNode(Node):
     def __init__(self, threshold: float, order: int):
@@ -66,6 +73,9 @@ class DecisionNode(Node):
             return self._children[0].operation(value)
         else:
             return self._children[1].operation(value)
+
+    def accept(self, visitor):
+        visitor.visit_decision_node(self)
 
 # =================================
 # State Pattern
@@ -233,23 +243,64 @@ class BFSIterator(Iterator):
 # Visitor Pattern
 # =================================
 
-class DeepVisitor:
-    def __init__(self, tree):
-        self.tree = tree
+class Visitor(ABC):
+    """Interface do Visitor"""
 
-    def visit(self, node):
-        return node.make_decision(answer)
+    @abstractmethod
+    def visit_decision_node(self, element: DecisionNode) -> None:
+        pass
 
-class CountLeavesVisitor:
-    def __init__(self, tree):
-        self.tree = tree
+    @abstractmethod
+    def visit_leaf_node(self, element: LeafNode) -> None:
+        pass
 
-    def visit(self, node):
-        return node.make_decision(answer)
+class DepthVisitor(Visitor):
+    def __init__(self, root: Node):
+        self.root = root
+        self.max_depth = 0
 
-class CountNodesVisitor:
-    def __init__(self, tree):
-        self.tree = tree
+    def visit_decision_node(self, element: DecisionNode) -> None:
+        """Visita DecisionNode (mockado)"""
+        depth = self._calculate_depth(element)
+        if depth > self.max_depth:
+            self.max_depth = depth
+        # print(f"[DepthVisitor] Visitando DecisionNode {element.order} na profundidade {depth}")
 
-    def visit(self, node):
-        return node.make_decision(answer)
+    def visit_leaf_node(self, element: LeafNode) -> None:
+        """Visita LeafNode (mockado)"""
+        depth = self._calculate_depth(element)
+        if depth > self.max_depth:
+            self.max_depth = depth
+        # print(f"[DepthVisitor] Visitando LeafNode {element.order} na profundidade {depth}")
+
+    def _calculate_depth(self, node: Node) -> int:
+        """Calcula profundidade de um nó"""
+        depth = 0
+        current = node
+        while current is not None and hasattr(current, '_parent'):
+            if hasattr(current, '_parent') and current._parent is not None:
+                depth += 1
+                current = current._parent
+            else:
+                break
+        return depth
+
+    def get_result(self) -> int:
+        return self.max_depth
+
+class CountLeavesVisitor(Visitor):
+    def __init__(self, root: Node):
+        self.root = root
+        self.count = 0
+
+    def visit_decision_node(self, element: DecisionNode) -> None:
+        """Visita DecisionNode (mockado)"""
+        # print(f"[CountLeavesVisitor] Visitando DecisionNode {element.order}")
+
+    def visit_leaf_node(self, element: LeafNode) -> None:
+        """Visita LeafNode (mockado)"""
+        self.count += 1
+        # print(f"[CountLeavesVisitor] Encontrada folha: nó {element.order}")
+
+    def get_result(self) -> int:
+        return self.count
