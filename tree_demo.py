@@ -58,9 +58,23 @@ tree_obj = Tree(root)
 print("\n=== PreOrderIterator ===")
 iterator = PreOrderIterator(root)
 for node in iterator:
-    pass  # Os prints já são feitos dentro do __next__
+    print(f"[PreOrderIterator] Visitando: {node.order}")
 
 print("\n=== BFSIterator ===")
 bfs_iterator = BFSIterator(root)
 for node in bfs_iterator:
-    pass  # Os prints já são feitos dentro do __next__
+    print(f"[BFSIterator] Visitando: {node.order}")
+
+# =================================
+# State Pattern Demo
+# =================================
+
+from tree_design import TreeBuilder
+
+print("\n=== State Pattern Demo ===")
+print("Construindo árvore com TreeBuilder...\n")
+
+builder = TreeBuilder()
+builder.construct()
+
+print("\nÁrvore construída!")

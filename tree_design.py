@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from typing import List
+import random
 
 # =================================
 # Composite Pattern
@@ -71,9 +72,13 @@ class DecisionNode(Node):
 # =================================
 
 class Tree:
-    def __init__(self, root: Node = None):
+
+    _state: None
+
+    def __init__(self, root: Node):
         self.root = root
-        self.iterator = PreOrderIterator(self.root) if root else None
+        self.set_state(SplitState())
+        self.iterator = None
 
     def operation(self, value: float) -> str:
         return self.root.operation(value)
@@ -81,23 +86,14 @@ class Tree:
     def __iter__(self) -> Iterator[Node]:
         return self.iterator
 
-    def change_iterator(self, iterator: Iterator[Node]):
+    def set_iterator(self, iterator: Iterator[Node]):
         self.iterator = iterator
-
-class TreeBuilder:
-    _state: None
-
-    def __init__(self, state: State) -> None:
-        self.set_state(state)
-        self._tree: Tree = Tree()
 
     def set_state(self, state: State):
         self._state = state
-        self._context = self
+        state.context = self
 
-    def execute(self):
-        self._state.execute()
-
+class TreeBuilder:
     @property
     def tree(self) -> Tree:
         return self._tree
@@ -106,32 +102,85 @@ class TreeBuilder:
     def tree(self, tree: Tree):
         self._tree = tree
 
+    def construct(self):
+        index = [0]  # Lista para poder modificar dentro dos estados
+        root = DecisionNode(50, index[0])
+        self.tree = Tree(root)
+        iterator = BFSIterator(root)
+
+        try:
+            for node in iterator:
+                # Sempre executa o estado atual
+                self.tree._state.execute(node, index, self.tree)
+
+                # Adiciona filhos à fila do iterator
+                if node.is_composite():
+                    for filho in node.get_children():
+                        iterator._queue.append(filho)
+        except StopIteration:
+            pass  # StoppingState termina o loop
+
 class State(ABC):
     @property
-    def context(self) -> TreeBuilder:
+    def context(self) -> Tree:
         return self._context
 
     @context.setter
-    def context(self, tree: TreeBuilder):
+    def context(self, tree: Tree):
         self._context = tree
 
     @abstractmethod
-    def execute(self):
+    def execute(self, node: Node, index: List[int], tree: Tree):
         pass
 
 
 class SplitState(State):
-    def execute(self):
-        random.choice([0,1])
-        self.context.tree.root.add(DecisionNode(random.random()))
+    def execute(self, node: Node, index: List[int], tree: Tree):
+        print(f"[SplitState] Executando: {node.order}")
+        # Split: divide o nó se for composite sem filhos
+        if node.is_composite() and len(node.get_children()) == 0:
+            index[0] += 1
+            left_branch = DecisionNode(25, index[0])
+            index[0] += 1
+            right_branch = DecisionNode(75, index[0])
+            node.add(left_branch)
+            node.add(right_branch)
 
-class StoppingState(State):
-    def execute(self):
-        pass
+        # Verifica mudança de estado
+        if random.random() > 0.8:
+            tree.set_state(PruningState())
+            print(f"Mudando para PruningState")
 
 class PruningState(State):
-    def execute(self):
-        pass
+    def execute(self, node: Node, index: List[int], tree: Tree):
+        print(f"[PruningState] Executando: {node.order}")
+        # Prune: remove nós sem filhos
+        if len(node.get_children()) == 0:
+            parent = node._parent if hasattr(node, '_parent') else None
+            if parent is not None and isinstance(parent, DecisionNode):
+                if random.random() < 0.5:
+                    print(f"[PruningState] Removendo nó: {node.order}")
+                    parent.remove(node)
+
+            # Verifica mudança de estado
+            if random.random() < 0.4:
+                tree.set_state(StoppingState())
+                print(f"Mudando para StoppingState")
+
+class StoppingState(State):
+    def execute(self, node: Node, index: List[int], tree: Tree):
+        print(f"[StoppingState] Executando...")
+        # Stop: adiciona folhas em todos os nós sem filhos
+        iterator = BFSIterator(tree.root)
+        for n in iterator:
+            if n.is_composite() and len(n.get_children()) == 0:
+                index[0] += 1
+                n.add(LeafNode("Rosa", index[0]))
+                index[0] += 1
+                n.add(LeafNode("Verde", index[0]))
+        # Para o loop quando chega no StoppingState
+        raise StopIteration
+
 
 # =================================
 # Iterator Pattern
@@ -149,7 +198,6 @@ class PreOrderIterator(Iterator):
             raise StopIteration
 
         node = self._stack.pop()
-        print(f"[PreOrderIterator] Visitando: {node.order}")
 
         if node.is_composite() and hasattr(node, 'get_children'):
             children = node.get_children()
@@ -171,7 +219,6 @@ class BFSIterator(Iterator):
             raise StopIteration
 
         node = self._queue.pop(0)
-        print(f"[BFSIterator] Visitando: {node.order}")
 
         if node.is_composite() and hasattr(node, 'get_children'):
             children = node.get_children()
