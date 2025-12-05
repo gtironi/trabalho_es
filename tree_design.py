@@ -25,7 +25,7 @@ class Node(ABC):
         return False
 
     @abstractmethod
-    def operation(self) -> str:
+    def operation(self, value: float) -> str:
         pass
 
 class LeafNode(Node):
@@ -33,7 +33,7 @@ class LeafNode(Node):
         super().__init__()
         self._category = category
 
-    def operation(self):
+    def operation(self, value: float) -> str:
         return f"Leaf: {self._category}"
 
 class DecisionNode(Node):
@@ -55,9 +55,9 @@ class DecisionNode(Node):
 
     def operation(self, value: float):
         if value < self._threshold:
-            return self._children[0].operation()
+            return self._children[0].operation(value)
         else:
-            return self._children[1].operation()
+            return self._children[1].operation(value)
 
 # =================================
 # State Pattern
