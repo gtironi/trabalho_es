@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from collections.abc import Iterable, Iterator
 from typing import List
 
 # =================================
@@ -63,44 +64,75 @@ class DecisionNode(Node):
 # State Pattern
 # =================================
 
+class Tree:
+    def __init__(self, root: Node):
+        self.root = root
+        self.iterator = PreOrderIterator(self.root)
+
+    def operation(self, value: float) -> str:
+        return self.root.operation(value)
+
+    def __iter__(self) -> Iterator[Node]:
+        return self.iterator
+
+    def change_iterator(self, iterator: Iterator[Node]):
+        self.iterator = iterator
+
 class TreeBuilder:
     def __init__(self):
-        self.root = None
+        self.state = None
+        self.tree = None
 
-    def build_tree(self):
-        self.root = DecisionNode("root", "Is it a mammal?")
-        self.root.add_child(LeafNode("dog", "Woof"))
-        self.root.add_child(LeafNode("bird", "Tweet"))
-        return self.root
+    def set_state(self, state: State):
+        self.state = state
+        state.construct_tree = self.tree
 
-    def get_root(self):
-        return self.root
+    def execute(self):
+        self.state.execute()
 
-class State:
-    def __init__(self, tree):
-        self.tree = tree
+
+class State(ABC):
+    @property
+    def construct_tree(self) -> Tree:
+        return self._context
+
+    @construct_tree.setter
+    def construct_tree(self, tree: Tree):
+        self._context = tree
+
+    @abstractmethod
+    def execute(self):
+        pass
+
 
 class SplitState(State):
-    def __init__(self, tree):
-        super().__init__(tree)
-        self.tree = tree
-
+    def execute(self):
+        pass
 
 class StoppingState(State):
-    def __init__(self, tree):
-        super().__init__(tree)
-        self.tree = tree
+    def execute(self):
+        pass
 
 class PruningState(State):
-    def __init__(self, tree):
-        super().__init__(tree)
-        self.tree = tree
+    def execute(self):
+        pass
 
 # =================================
 # Iterator Pattern
 # =================================
 
-class PreOrderIterator:
+class PreOrderIterator(Iterator):
+    def __init__(self, tree):
+        self.tree = tree
+        self._current = tree
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        pass
+
+class BFSIterator(Iterator):
     def __init__(self, tree):
         self.tree = tree
 
@@ -108,17 +140,8 @@ class PreOrderIterator:
         return self
 
     def __next__(self):
-        return self.tree.make_decision(answer)
+        pass
 
-class BFSIterator:
-    def __init__(self, tree):
-        self.tree = tree
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        return self.tree.make_decision(answer)
 
 # =================================
 # Visitor Pattern
