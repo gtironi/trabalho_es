@@ -33,7 +33,7 @@ print(tree.operation(90)) # Verde
 # Iterator Demo
 # =================================
 
-from tree_design import Tree, PreOrderIterator
+from tree_design import Tree, PreOrderIterator, BFSIterator
 
 # Cria uma árvore para teste
 root = DecisionNode(50, 1)
@@ -58,4 +58,9 @@ tree_obj = Tree(root)
 print("\n=== PreOrderIterator ===")
 iterator = PreOrderIterator(root)
 for node in iterator:
+    pass  # Os prints já são feitos dentro do __next__
+
+print("\n=== BFSIterator ===")
+bfs_iterator = BFSIterator(root)
+for node in bfs_iterator:
     pass  # Os prints já são feitos dentro do __next__

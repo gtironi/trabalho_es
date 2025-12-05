@@ -160,14 +160,26 @@ class PreOrderIterator(Iterator):
         return node
 
 class BFSIterator(Iterator):
-    def __init__(self, tree):
-        self.tree = tree
+    def __init__(self, root: Node):
+        self._queue = [root] if root else []
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        pass
+        if not self._queue:
+            raise StopIteration
+
+        node = self._queue.pop(0)
+        print(f"[BFSIterator] Visitando: {node.order}")
+
+        if node.is_composite() and hasattr(node, 'get_children'):
+            children = node.get_children()
+            # Adiciona os filhos no final da fila
+            for child in children:
+                self._queue.append(child)
+
+        return node
 
 
 # =================================
