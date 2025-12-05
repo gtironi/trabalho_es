@@ -1,33 +1,63 @@
+from __future__ import annotations
+from abc import ABC, abstractmethod
+from typing import List
+
 # =================================
 # Composite Pattern
 # =================================
 
-class Node:
-    def __init__(self, value):
-        self.value = value
-        self.children = []
+class Node(ABC):
+    @property
+    def parent(self) -> Node:
+        return self._parent
 
-    def add_child(self, child_node):
-        self.children.append(child_node)
+    @parent.setter
+    def parent(self, parent: Node):
+        self._parent = parent
 
-    def remove_child(self, child_node):
-        self.children.remove(child_node)
+    def add(self, component: Node):
+        pass
 
-class DecisionNode(Node):
-    def __init__(self, value, question):
-        super().__init__(value)
-        self.question = question
+    def remove(self, component: Node):
+        pass
 
-    def make_decision(self, answer):
-        if answer == "yes":
-            return self.children[0]
-        else:
-            return self.children[1]
+    def is_composite(self) -> bool:
+        return False
+
+    @abstractmethod
+    def operation(self) -> str:
+        pass
 
 class LeafNode(Node):
-    def __init__(self, value, result):
-        super().__init__(value)
-        self.result = result
+    def __init__(self, category: str):
+        super().__init__()
+        self._category = category
+
+    def operation(self):
+        return f"Leaf: {self._category}"
+
+class DecisionNode(Node):
+    def __init__(self, threshold: float):
+        super().__init__()
+        self._children: List[Node] = []
+        self._threshold = threshold
+
+    def add(self, component: Node):
+        self._children.append(component)
+        component.parent = self
+
+    def remove(self, component: Node):
+        self._children.remove(component)
+        component.parent = None
+
+    def is_composite(self) -> bool:
+        return True
+
+    def operation(self, value: float):
+        if value < self._threshold:
+            return self._children[0].operation()
+        else:
+            return self._children[1].operation()
 
 # =================================
 # State Pattern
