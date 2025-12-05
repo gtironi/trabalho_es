@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from typing import List
 import random
 
@@ -11,6 +11,7 @@ import random
 class Node(ABC):
     def __init__(self, order: int):
         self.order = order
+        self._parent = None
 
     @property
     def parent(self) -> Node:
@@ -83,11 +84,10 @@ class DecisionNode(Node):
 
 class Tree:
 
-    _state: None
 
     def __init__(self, root: Node):
         self.root = root
-        self.set_state(SplitState())
+        self.set_state(SplittingState())
         self.iterator = None
 
     def operation(self, value: float) -> str:
@@ -144,9 +144,9 @@ class State(ABC):
         pass
 
 
-class SplitState(State):
+class SplittingState(State):
     def execute(self, node: Node, index: List[int], tree: Tree):
-        print(f"[SplitState] Executando: {node.order}")
+        print(f"[SplittingState] Executando: {node.order}")
         # Split: divide o nó se for composite sem filhos
         if node.is_composite() and len(node.get_children()) == 0:
             index[0] += 1
@@ -260,14 +260,14 @@ class DepthVisitor(Visitor):
         self.max_depth = 0
 
     def visit_decision_node(self, element: DecisionNode) -> None:
-        """Visita DecisionNode (mockado)"""
+        """Visita DecisionNode"""
         depth = self._calculate_depth(element)
         if depth > self.max_depth:
             self.max_depth = depth
         # print(f"[DepthVisitor] Visitando DecisionNode {element.order} na profundidade {depth}")
 
     def visit_leaf_node(self, element: LeafNode) -> None:
-        """Visita LeafNode (mockado)"""
+        """Visita LeafNode"""
         depth = self._calculate_depth(element)
         if depth > self.max_depth:
             self.max_depth = depth
@@ -294,11 +294,11 @@ class CountLeavesVisitor(Visitor):
         self.count = 0
 
     def visit_decision_node(self, element: DecisionNode) -> None:
-        """Visita DecisionNode (mockado)"""
+        """Visita DecisionNode """
         # print(f"[CountLeavesVisitor] Visitando DecisionNode {element.order}")
 
     def visit_leaf_node(self, element: LeafNode) -> None:
-        """Visita LeafNode (mockado)"""
+        """Visita LeafNode """
         self.count += 1
         # print(f"[CountLeavesVisitor] Encontrada folha: nó {element.order}")
 
