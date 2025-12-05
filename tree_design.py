@@ -8,6 +8,9 @@ from typing import List
 # =================================
 
 class Node(ABC):
+    def __init__(self, order: int):
+        self.order = order
+
     @property
     def parent(self) -> Node:
         return self._parent
@@ -30,16 +33,16 @@ class Node(ABC):
         pass
 
 class LeafNode(Node):
-    def __init__(self, category: str):
-        super().__init__()
+    def __init__(self, category: str, order: int):
+        super().__init__(order)
         self._category = category
 
     def operation(self, value: float) -> str:
         return f"Leaf: {self._category}"
 
 class DecisionNode(Node):
-    def __init__(self, threshold: float):
-        super().__init__()
+    def __init__(self, threshold: float, order: int):
+        super().__init__(order)
         self._children: List[Node] = []
         self._threshold = threshold
 
@@ -54,6 +57,9 @@ class DecisionNode(Node):
     def is_composite(self) -> bool:
         return True
 
+    def get_children(self) -> List[Node]:
+        return self._children
+
     def operation(self, value: float):
         if value < self._threshold:
             return self._children[0].operation(value)
@@ -65,9 +71,9 @@ class DecisionNode(Node):
 # =================================
 
 class Tree:
-    def __init__(self, root: Node):
+    def __init__(self, root: Node = None):
         self.root = root
-        self.iterator = PreOrderIterator(self.root)
+        self.iterator = PreOrderIterator(self.root) if root else None
 
     def operation(self, value: float) -> str:
         return self.root.operation(value)
@@ -132,18 +138,24 @@ class PruningState(State):
 # =================================
 
 class PreOrderIterator(Iterator):
-    def __init__(self, tree: Tree):
-        self._current = tree.root
+    def __init__(self, root: Node):
+        self._stack = [root] if root else []
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        node = self._current
-        if node.is_composite():
-            self._current = node.children[0]
-        else:
-            self._current = node.parent.children[1]
+        if not self._stack:
+            raise StopIteration
+
+        node = self._stack.pop()
+        print(f"[PreOrderIterator] Visitando: {node.order}")
+
+        if node.is_composite() and hasattr(node, 'get_children'):
+            children = node.get_children()
+            # Adiciona na ordem inversa para processar esquerda primeiro (LIFO)
+            for child in reversed(children):
+                self._stack.append(child)
 
         return node
 
