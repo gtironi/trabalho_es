@@ -79,25 +79,34 @@ class Tree:
         self.iterator = iterator
 
 class TreeBuilder:
-    def __init__(self):
-        self.state = None
-        self.tree = None
+    _state: None
+
+    def __init__(self, state: State) -> None:
+        self.set_state(state)
+        self._tree: Tree = Tree()
 
     def set_state(self, state: State):
-        self.state = state
-        state.construct_tree = self.tree
+        self._state = state
+        self._context = self
 
     def execute(self):
-        self.state.execute()
+        self._state.execute()
 
+    @property
+    def tree(self) -> Tree:
+        return self._tree
+
+    @tree.setter
+    def tree(self, tree: Tree):
+        self._tree = tree
 
 class State(ABC):
     @property
-    def construct_tree(self) -> Tree:
+    def context(self) -> TreeBuilder:
         return self._context
 
-    @construct_tree.setter
-    def construct_tree(self, tree: Tree):
+    @context.setter
+    def context(self, tree: TreeBuilder):
         self._context = tree
 
     @abstractmethod
@@ -107,7 +116,8 @@ class State(ABC):
 
 class SplitState(State):
     def execute(self):
-        pass
+        random.choice([0,1])
+        self.context.tree.root.add(DecisionNode(random.random()))
 
 class StoppingState(State):
     def execute(self):
@@ -122,15 +132,20 @@ class PruningState(State):
 # =================================
 
 class PreOrderIterator(Iterator):
-    def __init__(self, tree):
-        self.tree = tree
-        self._current = tree
+    def __init__(self, tree: Tree):
+        self._current = tree.root
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        pass
+        node = self._current
+        if node.is_composite():
+            self._current = node.children[0]
+        else:
+            self._current = node.parent.children[1]
+
+        return node
 
 class BFSIterator(Iterator):
     def __init__(self, tree):
